@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>left-accordion</title>
+    <style>
+        .left-accordion{
+            color: white;
+            cursor: pointer;
+        }
+        .left-accordion-panel{
+            margin-bottom:-1px;
+            position: relative;
+            background-color: #3D464D;
+        }
+        .left-accordion-panel.active .left-accordion-head{
+            background-color: #0D90E1;
+        }
+        .left-accordion-head{
+            display: block;
+            font-weight: bold;
+            line-height: 3em;
+            border-width:1px;
+            border-style:solid;
+            border-color: rgb(125,125,125);
+            padding:0 12px;
+        }
+        .left-accordion-head::after{
+            content: "\FE65";
+            float: right;
+        }
+        .left-accordion-panel.active .left-accordion-head::after{
+            -moz-transform:rotate(90deg);
+            -webkit-transform:rotate(90deg);
+            -ms-transform:rotate(90deg);
+            transform:rotate(90deg);
+        }
+        .left-accordion-content{
+            color: #ADAFB0;
+            margin: 0;
+            padding: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        .left-accordion-panel.active .left-accordion-content{
+            height: auto;
+        }
+        .left-accordion-leaf{
+            line-height: 2em;
+            list-style: none;
+            padding-left:24px;
+        }
+        .left-accordion-leaf.active{
+            background-color: #4C5B65;
+            color: #FFF;
+        }
+    </style>
+</head>
+<body>
+    <div id="left-accordion">
+
+    </div>
+    <script src="jquery-1.11.0.js"></script>
+<script>
+    var datas=[{
+        text:"首页",
+        url:"first",
+        icon:"",
+        children:[{
+            text:"漏洞公告",
+            url:"first-1"
+        },{
+            text:"高危漏洞风险分布",
+            url:"first-2"
+        },{
+            text:"漏洞提交",
+            url:"first-3"
+        }]
+    },{
+        text:"漏洞管理",
+        url:"second",
+        icon:"",
+        children:[{
+            text:"漏洞状态综合分析",
+            url:"second-1"
+        },{
+            text:"漏洞提交20161226",
+            url:"second-2"
+        },{
+            text:"漏洞复现20161226",
+            url:"second-3"
+        }]
+    }];
+    generateNavigation("#left-accordion",datas);
+    function generateNavigation(dom,datas){
+        $(dom).addClass("left-accordion").html(
+            datas.map(function(data){
+                return $("<div/>",{
+                    "class":"left-accordion-panel"
+                }).append(
+                        $("<a/>",{
+                            "class":"left-accordion-head left-accordion-item",
+                            "data-url":data.url,
+                            "click":function(){
+                                _click.call(this);
+                            }
+                        }).append(
+                                $("<span/>",{
+                                    "class":function(){
+                                        return "left-accordion-icon";
+                                    }
+                                }),
+                                $("<span/>",{
+                                    "class":"left-accord-title",
+                                    "text":data.text
+                                })
+                        ),
+                        $("<ul/>",{
+                            "class":"left-accordion-content"
+                        }).append(
+                            (data.children||[]).map(function(child){
+                                return $("<li/>",{
+                                    "class":"left-accordion-leaf left-accordion-item",
+                                    "text":child.text,
+                                    "data-url":child.url,
+                                    "click":function(){
+                                        _click.call(this);
+                                    }
+                                })
+                            })
+                        )
+                )
+            })
+        );
+        function _click( ){
+            $(dom).find(".left-accordion-panel,.left-accordion-item").removeClass("active");
+            $(this).addClass("active").closest(".left-accordion-panel").addClass("active");
+            console.log($(this).attr("data-url"));
+        };
+    };
+</script>
+</body>
+</html>
