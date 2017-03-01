@@ -23,11 +23,17 @@
             content: ">";
             float: right;
         }
+        .accordion-first.active>.accordion-head{
+            background-color: #0d90e2;
+        }
         .accordion-second>.accordion-head{
             color: #c1c5c8;
             background-color: #2f343a;
             line-height: 2em;
             padding: 0 15px 0 30px;
+        }
+        .accordion-second.active>.accordion-head{
+            background-color: #4b5c66;
         }
         .accordion-third>.accordion-head{
             font-size: 14px;
@@ -35,6 +41,9 @@
             background-color: #2f343a;
             line-height: 2em;
             padding: 0 15px 0 30px;
+        }
+        .accordion-third.active>.accordion-head{
+            color: #0d90e2;
         }
         .accordion-third>.accordion-head::before{
             content: "\2027";
@@ -143,9 +152,7 @@
             headRenderFn:function(data,level){
                 return data.text;
             },
-            click:function(data){
-
-            }
+            click:function(data){return true}
         }
         function _init(params){
             return this;
@@ -158,29 +165,26 @@
                 firsts.map(function(first){
                     var seconds=first.children||[];
                     return $("<div/>",{
-                        "class": "accordion-item accordion-first "+(_isActive(first)?" active":"")
+                        "class": "accordion-item accordion-first"+(first._active?" active":"")
                     }).append(
-                        _generateHeader.call($self,first,firsts,1),
+                        _generateHeader.call($self,first,firsts),
                         $("<div/>",{
                             "class":"accordion-content"
                         }).append(
                             seconds.map(function(second){
                                 var thirds=second.children||[];
                                 return $("<div/>",{
-                                    "class":"accordion-item accordion-second"+(_isActive(first)?" active":"")
+                                    "class":"accordion-item accordion-second"+(second._active?" active":"")
                                 }).append(
-                                    _generateHeader.call($self,second,seconds,2),
+                                    _generateHeader.call($self,second,seconds),
                                     $("<div/>",{
                                         "class":"accordion-content"
                                     }).append(
                                         thirds.map(function(third){
                                             return $("<div/>",{
-                                                "class":"accordion-item accordion-third"
+                                                "class":"accordion-item accordion-third"+(third._active?" active":"")
                                             }).append(
-                                                $("<div/>",{
-                                                    "class":"accordion-head",
-                                                    "html":params.headRenderFn(third,3)
-                                                })
+                                                _generateHeader.call($self,third,thirds)
                                             )
                                         })
                                     )
@@ -191,22 +195,23 @@
                 })
             )
         }
-        function _generateHeader(data,datas,level){
+        function _generateHeader(data,datas){
             var $self=this,
                     params=$self.data("accordion");
             var header=$("<div/>",{
                 "class":"accordion-head",
-                "html":params.headRenderFn(data,level),
+                "html":params.headRenderFn(data),
                 "click":function(){
                     var _active=data._active;
                     if(params.singleSelect){
-                        datas.forEach(function(first){
+                        datas.forEach(function(data){
                             data._active=false;
                         });
                     }
                     data._active=!_active;
-                    _render.call($self);
-                    params.click(data);
+                    if(params.click.call(this,data)){
+                        _render.call($self);
+                    }
                 }
             });
             header.attr(Object.keys(params.extraAttr).reduce(function(target,attr){
@@ -214,20 +219,6 @@
                 return target;
             },{}));
             return header;
-        }
-        function _isActive(data){
-            var active=false;
-            isActive(data);
-            return active;
-            function isActive(data){
-                if(data._active){
-                    active=true;
-                    return;
-                }
-                (data.children||[]).forEach(function(da){
-                    isActive(da);
-                })
-            };
         }
     })(jQuery);
     $("#left-accordion").accordion({
@@ -238,7 +229,11 @@
             }
         },
         click:function(data){
-            console.log(data);
+            if(data.children&&data.children.length){
+                $(this).next(".accordion-content").find(".accordion-head:eq(0)").click();
+                return false;
+            }
+            return true;
         },
         headRenderFn:function(data,level){
             if(level==1){
