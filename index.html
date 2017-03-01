@@ -4,68 +4,53 @@
     <meta charset="UTF-8">
     <title>left-accordion</title>
     <style>
-        .left-accordion{
-            color: white;
+        .accordion{
             cursor: pointer;
         }
-        .left-accordion-panel{
-            margin-bottom:-1px;
-            position: relative;
-            background-color: #3D464D;
+        .accordion-content{
+            display: none;
         }
-        .left-accordion-panel.active .left-accordion-head{
-            background-color: #0D90E1;
-        }
-        .left-accordion-head{
+        .accordion-item.active >.accordion-content{
             display: block;
-            font-weight: bold;
-            line-height: 3em;
-            border-width:1px;
-            border-style:solid;
-            border-color: rgb(125,125,125);
-            padding:0 12px;
         }
-        .left-accordion-head::after{
-            content: "\FE65";
+        .accordion-first>.accordion-head{
+            color: white;
+            background-color: #3d464d;
+            line-height: 3em;
+            padding: 0 15px;
+        }
+        .accordion-first>.accordion-head::after{
+            content: ">";
             float: right;
         }
-        .left-accordion-panel.active .left-accordion-head::after{
-            -moz-transform:rotate(90deg);
-            -webkit-transform:rotate(90deg);
-            -ms-transform:rotate(90deg);
-            transform:rotate(90deg);
-        }
-        .left-accordion-content{
-            color: #ADAFB0;
-            margin: 0;
-            padding: 0;
-            height: 0;
-            overflow: hidden;
-        }
-        .left-accordion-panel.active .left-accordion-content{
-            height: auto;
-        }
-        .left-accordion-leaf{
+        .accordion-second>.accordion-head{
+            color: #c1c5c8;
+            background-color: #2f343a;
             line-height: 2em;
-            list-style: none;
-            padding-left:24px;
+            padding: 0 15px 0 30px;
         }
-        .left-accordion-leaf.active{
-            background-color: #4C5B65;
-            color: #FFF;
+        .accordion-third>.accordion-head{
+            font-size: 14px;
+            color: #63676a;
+            background-color: #2f343a;
+            line-height: 2em;
+            padding: 0 15px 0 30px;
+        }
+        .accordion-third>.accordion-head::before{
+            content: "\2027";
+            margin-right: .5em;
         }
     </style>
 </head>
 <body>
     <div id="left-accordion">
-
     </div>
     <script src="jquery-1.11.0.js"></script>
 <script>
     var datas=[{
         text:"首页",
         url:"first",
-        icon:"",
+        icon:"a",
         children:[{
             text:"漏洞公告",
             url:"first-1"
@@ -79,7 +64,7 @@
     },{
         text:"漏洞管理",
         url:"second",
-        icon:"",
+        icon:"b",
         children:[{
             text:"漏洞状态综合分析",
             url:"second-1"
@@ -89,55 +74,192 @@
         },{
             text:"漏洞复现20161226",
             url:"second-3"
+        },{
+            text:"漏洞收录管理",
+            url:"second-4",
+            children:[{
+                text:"自收漏洞",
+                url:"second-4-1"
+            },{
+                text:"漏洞提交",
+                url:"second-4-2"
+            },{
+                text:"漏洞复现",
+                url:"second-4-3"
+            },{
+                text:"漏洞定级",
+                url:"second-4-4"
+            },{
+                text:"漏洞收录",
+                url:"second-4-5",
+                _active:true
+            }]
         }]
     }];
-    generateNavigation("#left-accordion",datas);
-    function generateNavigation(dom,datas){
-        $(dom).addClass("left-accordion").html(
-            datas.map(function(data){
-                return $("<div/>",{
-                    "class":"left-accordion-panel"
-                }).append(
-                        $("<a/>",{
-                            "class":"left-accordion-head left-accordion-item",
-                            "data-url":data.url,
-                            "click":function(){
-                                _click.call(this);
-                            }
+    (function($){
+        if($.fn.accordion){
+            return;
+        }
+        var setMethods={
+            
+        };
+        var getMethods={
+            
+        };
+        $.fn.accordion=function(){
+            var args=arguments,params,method;
+            if(!args.length|| typeof args[0] == 'object'){
+                return this.each(function(idx){
+                    var $self=$(this);
+                    $self.data('accordion',$.extend(true,{},$.fn.accordion.default,args[0]));
+                    params=$self.data('accordion');
+                    _init.call( $self,params);
+                    _render.call($self);
+                });
+            }else{
+                if(!$(this).data('accordion')){
+                    throw new Error('You has not init accordion!');
+                }
+                params=Array.prototype.slice.call(args,1);
+                if (setMethods.hasOwnProperty(args[0])){
+                    method=setMethods[args[0]];
+                    return this.each(function(idx){
+                        var $self=$(this);
+                        method.apply($self,params);
+                        _render.call($self);
+                    });
+                }else if(getMethods.hasOwnProperty(args[0])){
+                    method=getMethods[args[0]];
+                    return method.apply(this,params);
+                }else{
+                    throw new Error('There is no such method');
+                }
+            }
+        }
+        $.fn.accordion.default={
+            datas:[],
+            singleSelect:true,
+            extraAttr:{},
+            headRenderFn:function(data,level){
+                return data.text;
+            },
+            click:function(data){
+
+            }
+        }
+        function _init(params){
+            return this;
+        }
+        function _render(){
+            var $self=this,
+                params=$self.data("accordion"),
+                firsts=params.datas;
+            $self.addClass("accordion").html(
+                firsts.map(function(first){
+                    var seconds=first.children||[];
+                    return $("<div/>",{
+                        "class": "accordion-item accordion-first "+(_isActive(first)?" active":"")
+                    }).append(
+                        _generateHeader.call($self,first,firsts,1),
+                        $("<div/>",{
+                            "class":"accordion-content"
                         }).append(
-                                $("<span/>",{
-                                    "class":function(){
-                                        return "left-accordion-icon";
-                                    }
-                                }),
-                                $("<span/>",{
-                                    "class":"left-accord-title",
-                                    "text":data.text
-                                })
-                        ),
-                        $("<ul/>",{
-                            "class":"left-accordion-content"
-                        }).append(
-                            (data.children||[]).map(function(child){
-                                return $("<li/>",{
-                                    "class":"left-accordion-leaf left-accordion-item",
-                                    "text":child.text,
-                                    "data-url":child.url,
-                                    "click":function(){
-                                        _click.call(this);
-                                    }
-                                })
+                            seconds.map(function(second){
+                                var thirds=second.children||[];
+                                return $("<div/>",{
+                                    "class":"accordion-item accordion-second"+(_isActive(first)?" active":"")
+                                }).append(
+                                    _generateHeader.call($self,second,seconds,2),
+                                    $("<div/>",{
+                                        "class":"accordion-content"
+                                    }).append(
+                                        thirds.map(function(third){
+                                            return $("<div/>",{
+                                                "class":"accordion-item accordion-third"
+                                            }).append(
+                                                $("<div/>",{
+                                                    "class":"accordion-head",
+                                                    "html":params.headRenderFn(third,3)
+                                                })
+                                            )
+                                        })
+                                    )
+                                )
                             })
                         )
-                )
-            })
-        );
-        function _click( ){
-            $(dom).find(".left-accordion-panel,.left-accordion-item").removeClass("active");
-            $(this).addClass("active").closest(".left-accordion-panel").addClass("active");
-            console.log($(this).attr("data-url"));
-        };
-    };
+                    )
+                })
+            )
+        }
+        function _generateHeader(data,datas,level){
+            var $self=this,
+                    params=$self.data("accordion");
+            var header=$("<div/>",{
+                "class":"accordion-head",
+                "html":params.headRenderFn(data,level),
+                "click":function(){
+                    var _active=data._active;
+                    if(params.singleSelect){
+                        datas.forEach(function(first){
+                            data._active=false;
+                        });
+                    }
+                    data._active=!_active;
+                    _render.call($self);
+                    params.click(data);
+                }
+            });
+            header.attr(Object.keys(params.extraAttr).reduce(function(target,attr){
+                target[attr]=params.extraAttr[attr](data);
+                return target;
+            },{}));
+            return header;
+        }
+        function _isActive(data){
+            var active=false;
+            isActive(data);
+            return active;
+            function isActive(data){
+                if(data._active){
+                    active=true;
+                    return;
+                }
+                (data.children||[]).forEach(function(da){
+                    isActive(da);
+                })
+            };
+        }
+    })(jQuery);
+    $("#left-accordion").accordion({
+        datas:datas,
+        extraAttr:{
+            "data-page":function(data){
+                return data.url;
+            }
+        },
+        click:function(data){
+            console.log(data);
+        },
+        headRenderFn:function(data,level){
+            if(level==1){
+                return [$("<i/>",{
+                    "class":"accordion-icon "+data.icon,
+                    "text":"aa"
+                }),
+                $("<span/>",{
+                    "class":"accordion-title",
+                    "text":data.text
+                })];
+            }else{
+                return $("<span/>",{
+                    "class":"accordion-title",
+                    "text":data.text
+                })
+            }
+        }
+    })
+
+
 </script>
 </body>
 </html>
