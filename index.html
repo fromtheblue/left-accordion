@@ -100,8 +100,7 @@
                 url:"second-4-4"
             },{
                 text:"漏洞收录",
-                url:"second-4-5",
-                _active:true
+                url:"second-4-5"
             }]
         }]
     }];
@@ -110,7 +109,7 @@
             return;
         }
         var setMethods={
-            
+
         };
         var getMethods={
             
@@ -147,12 +146,11 @@
         }
         $.fn.accordion.default={
             datas:[],
-            singleSelect:true,
             extraAttr:{},
             headRenderFn:function(data,level){
                 return data.text;
             },
-            click:function(data){return true}
+            onSelected:function(data){}
         }
         function _init(params){
             return this;
@@ -165,7 +163,7 @@
                 firsts.map(function(first){
                     var seconds=first.children||[];
                     return $("<div/>",{
-                        "class": "accordion-item accordion-first"+(first._active?" active":"")
+                        "class": "accordion-item accordion-first"+(_isActive(first)?" active":"")
                     }).append(
                         _generateHeader.call($self,first,firsts),
                         $("<div/>",{
@@ -174,7 +172,7 @@
                             seconds.map(function(second){
                                 var thirds=second.children||[];
                                 return $("<div/>",{
-                                    "class":"accordion-item accordion-second"+(second._active?" active":"")
+                                    "class":"accordion-item accordion-second"+(_isActive(second)?" active":"")
                                 }).append(
                                     _generateHeader.call($self,second,seconds),
                                     $("<div/>",{
@@ -182,7 +180,7 @@
                                     }).append(
                                         thirds.map(function(third){
                                             return $("<div/>",{
-                                                "class":"accordion-item accordion-third"+(third._active?" active":"")
+                                                "class":"accordion-item accordion-third"+(_isActive(third)?" active":"")
                                             }).append(
                                                 _generateHeader.call($self,third,thirds)
                                             )
@@ -202,16 +200,10 @@
                 "class":"accordion-head",
                 "html":params.headRenderFn(data),
                 "click":function(){
-                    var _active=data._active;
-                    if(params.singleSelect){
-                        datas.forEach(function(data){
-                            data._active=false;
-                        });
-                    }
-                    data._active=!_active;
-                    if(params.click.call(this,data)){
-                        _render.call($self);
-                    }
+                    _clearActive(params.datas);
+                    data._active=true;
+                    _render.call($self);
+                    params.onSelected.call(this,data);
                 }
             });
             header.attr(Object.keys(params.extraAttr).reduce(function(target,attr){
@@ -219,6 +211,31 @@
                 return target;
             },{}));
             return header;
+        }
+        function _clearActive(datas){
+            clearActive(datas);
+            function clearActive(datas){
+                if(!datas){
+                    return;
+                }
+                datas.forEach(function(data){
+                    data._active=false;
+                    clearActive(data.children);
+                })
+            }
+        }
+        function _isActive(data){
+            var active=false;
+            isActive(data);
+            return active;
+            function isActive(data){
+                if(data._active){
+                    active=true;
+                }
+                (data.children||[]).forEach(function(data){
+                    isActive(data);
+                })
+            }
         }
     })(jQuery);
     $("#left-accordion").accordion({
@@ -228,29 +245,28 @@
                 return data.url;
             }
         },
-        click:function(data){
-            if(data.children&&data.children.length){
-                $(this).next(".accordion-content").find(".accordion-head:eq(0)").click();
-                return false;
-            }
-            return true;
-        },
-        headRenderFn:function(data,level){
-            if(level==1){
-                return [$("<i/>",{
-                    "class":"accordion-icon "+data.icon,
-                    "text":"aa"
-                }),
-                $("<span/>",{
-                    "class":"accordion-title",
-                    "text":data.text
-                })];
+        onSelected:function(data){
+            if(data.url=="first"){
+                console.log("首页");
+            }else if(data.children&&data.children.length){
+                $("[data-page="+data.children[0].url+"]").click();
             }else{
-                return $("<span/>",{
-                    "class":"accordion-title",
-                    "text":data.text
-                })
+                console.log(data.text);
             }
+        },
+        headRenderFn:function(data){
+            return [function(){
+                        if(data.icon){
+                            return $("<i/>",{
+                                "class":"accordion-icon "+data.icon,
+                                "text":"图标"
+                            })
+                        }
+                    }() ,
+                    $("<span/>",{
+                        "class":"accordion-title",
+                        "text":data.text
+                    })];
         }
     })
 
