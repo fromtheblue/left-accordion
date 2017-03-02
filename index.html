@@ -13,6 +13,12 @@
         .accordion-item.active >.accordion-content{
             display: block;
         }
+        .accordion-item.active >.accordion-head::after{
+            -moz-transform:rotate(90deg);
+            -webkit-transform:rotate(90deg);
+            -ms-transform:rotate(90deg);
+            transform:rotate(90deg);
+        }
         .accordion-first>.accordion-head{
             color: white;
             background-color: #3d464d;
